@@ -19,7 +19,7 @@ To run this stopwatch app, you only need a modern web browser.
 
 ### Usage
 
-1. **Open the HTML file in a browser.**
+1. **Open the following URL in a browser:** [https://chughtaimh.github.io/stopwatch/](https://chughtaimh.github.io/stopwatch/)
 2. **Interact with the timer using the buttons:**
    - Click "START" to begin timing.
    - Click "STOP" to pause the timer.
