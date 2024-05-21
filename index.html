@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stopwatch</title>
+    <title>Stopwatch and Timer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -66,13 +66,42 @@
             visibility: visible;
             opacity: 1;
         }
+        .toggle-button {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 0.25rem;
+            width: 50%;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .toggle-button.active {
+            background-color: #d1fae5;
+        }
+        .hidden {
+            display: none;
+        }
+        .slide {
+            transition: transform 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-white flex items-center justify-center min-h-screen">
     <div class="w-1/3 border p-4 rounded-lg shadow-lg">
-        <div id="timer" class="timer">00:00:00</div>
-        <div id="startStopButton" class="button button-start">START</div>
-        <div id="resetButton" class="button button-reset">RESET</div>
+        <div class="flex justify-center mb-4">
+            <div id="stopwatchToggle" class="toggle-button active">Stopwatch</div>
+            <div id="timerToggle" class="toggle-button">Timer</div>
+        </div>
+        <div id="stopwatchView" class="slide">
+            <div id="stopwatchTimer" class="timer">00:00:00</div>
+            <div id="stopwatchStartStopButton" class="button button-start">START</div>
+            <div id="stopwatchResetButton" class="button button-reset">RESET</div>
+        </div>
+        <div id="timerView" class="hidden slide">
+            <div id="timerDisplay" class="timer cursor-pointer">00:00</div>
+            <div id="timerStartStopButton" class="button button-start">START</div>
+            <div id="timerResetButton" class="button button-reset">RESET</div>
+        </div>
         <div class="tooltip mt-4">
             <span class="tooltiptext">Press "1" to start/stop, "2" to reset, or use the spacebar to start/stop.</span>
             <button class="button bg-transparent text-sm">How to use this tool <span class="text-lg">❓</span></button>
@@ -80,59 +109,178 @@
     </div>
 
     <script>
-        let timerInterval;
-        let isRunning = false;
-        let milliseconds = 0;
+        let stopwatchInterval;
+        let isStopwatchRunning = false;
+        let stopwatchMilliseconds = 0;
 
-        const timerElement = document.getElementById('timer');
-        const startStopButton = document.getElementById('startStopButton');
-        const resetButton = document.getElementById('resetButton');
+        const stopwatchTimerElement = document.getElementById('stopwatchTimer');
+        const stopwatchStartStopButton = document.getElementById('stopwatchStartStopButton');
+        const stopwatchResetButton = document.getElementById('stopwatchResetButton');
 
-        function updateTimer() {
-            milliseconds += 10;
-            const totalSeconds = Math.floor(milliseconds / 1000);
+        function updateStopwatch() {
+            stopwatchMilliseconds += 10;
+            const totalSeconds = Math.floor(stopwatchMilliseconds / 1000);
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
-            const ms = Math.floor((milliseconds % 1000) / 10);
-            timerElement.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}:${ms < 10 ? '0' : ''}${ms}`;
+            const ms = Math.floor((stopwatchMilliseconds % 1000) / 10);
+            stopwatchTimerElement.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}:${ms < 10 ? '0' : ''}${ms}`;
+        }
+
+        function startStopwatch() {
+            stopwatchInterval = setInterval(updateStopwatch, 10);
+            stopwatchStartStopButton.textContent = 'STOP';
+            stopwatchStartStopButton.classList.remove('button-start');
+            stopwatchStartStopButton.classList.add('button-stop');
+        }
+
+        function stopStopwatch() {
+            clearInterval(stopwatchInterval);
+            stopwatchStartStopButton.textContent = 'START';
+            stopwatchStartStopButton.classList.remove('button-stop');
+            stopwatchStartStopButton.classList.add('button-start');
+        }
+
+        function resetStopwatch() {
+            stopStopwatch();
+            stopwatchMilliseconds = 0;
+            stopwatchTimerElement.textContent = '00:00:00';
+        }
+
+        stopwatchStartStopButton.addEventListener('click', () => {
+            if (isStopwatchRunning) {
+                stopStopwatch();
+            } else {
+                startStopwatch();
+            }
+            isStopwatchRunning = !isStopwatchRunning;
+        });
+
+        stopwatchResetButton.addEventListener('click', resetStopwatch);
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' || event.key === '1') {
+                stopwatchStartStopButton.click();
+            } else if (event.key === '2') {
+                stopwatchResetButton.click();
+            }
+        });
+
+        // Timer functionality
+        let timerInterval;
+        let isTimerRunning = false;
+        let timerMilliseconds = 0;
+        let initialTimerMilliseconds = 0;
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerStartStopButton = document.getElementById('timerStartStopButton');
+        const timerResetButton = document.getElementById('timerResetButton');
+
+        function updateTimer() {
+            if (timerMilliseconds > 0) {
+                timerMilliseconds -= 1000;
+                const totalSeconds = Math.floor(timerMilliseconds / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            } else {
+                clearInterval(timerInterval);
+                timerDisplay.textContent = '00:00';
+                timerDisplay.classList.add('bg-red-500', 'text-white');
+                alert('Time is up!');
+            }
         }
 
         function startTimer() {
-            timerInterval = setInterval(updateTimer, 10);
-            startStopButton.textContent = 'STOP';
-            startStopButton.classList.remove('button-start');
-            startStopButton.classList.add('button-stop');
+            timerInterval = setInterval(updateTimer, 1000);
+            timerStartStopButton.textContent = 'STOP';
+            timerStartStopButton.classList.remove('button-start');
+            timerStartStopButton.classList.add('button-stop');
         }
 
         function stopTimer() {
             clearInterval(timerInterval);
-            startStopButton.textContent = 'START';
-            startStopButton.classList.remove('button-stop');
-            startStopButton.classList.add('button-start');
+            timerStartStopButton.textContent = 'START';
+            timerStartStopButton.classList.remove('button-stop');
+            timerStartStopButton.classList.add('button-start');
         }
 
         function resetTimer() {
             stopTimer();
-            milliseconds = 0;
-            timerElement.textContent = '00:00:00';
+            timerMilliseconds = initialTimerMilliseconds;
+            const totalSeconds = Math.floor(timerMilliseconds / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            timerDisplay.classList.remove('bg-red-500', 'text-white');
         }
 
-        startStopButton.addEventListener('click', () => {
-            if (isRunning) {
+        timerStartStopButton.addEventListener('click', () => {
+            if (isTimerRunning) {
                 stopTimer();
             } else {
                 startTimer();
             }
-            isRunning = !isRunning;
+            isTimerRunning = !isTimerRunning;
         });
 
-        resetButton.addEventListener('click', resetTimer);
+        timerResetButton.addEventListener('click', resetTimer);
+
+        timerDisplay.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = timerDisplay.textContent;
+            input.className = 'w-full p-2 border rounded mb-4';
+            timerDisplay.replaceWith(input);
+            input.focus();
+
+            input.addEventListener('blur', () => {
+                const [minutes, seconds] = input.value.split(':').map(Number);
+                timerMilliseconds = (minutes * 60 + seconds) * 1000;
+                initialTimerMilliseconds = timerMilliseconds;
+                timerDisplay.textContent = input.value;
+                input.replaceWith(timerDisplay);
+            });
+
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        });
+
+        // Toggle between Stopwatch and Timer
+        const stopwatchToggle = document.getElementById('stopwatchToggle');
+        const timerToggle = document.getElementById('timerToggle');
+        const stopwatchView = document.getElementById('stopwatchView');
+        const timerView = document.getElementById('timerView');
+
+        stopwatchToggle.addEventListener('click', () => {
+            stopwatchView.classList.remove('hidden');
+            timerView.classList.add('hidden');
+            stopwatchToggle.classList.add('active');
+            timerToggle.classList.remove('active');
+            stopwatchView.style.transform = 'translateX(0)';
+            timerView.style.transform = 'translateX(100%)';
+        });
+
+        timerToggle.addEventListener('click', () => {
+            stopwatchView.classList.add('hidden');
+            timerView.classList.remove('hidden');
+            timerToggle.classList.add('active');
+            stopwatchToggle.classList.remove('active');
+            stopwatchView.style.transform = 'translateX(-100%)';
+            timerView.style.transform = 'translateX(0)';
+        });
 
         document.addEventListener('keydown', (event) => {
             if (event.code === 'Space' || event.key === '1') {
-                startStopButton.click();
+                if (!timerView.classList.contains('hidden')) {
+                    timerStartStopButton.click();
+                }
             } else if (event.key === '2') {
-                resetButton.click();
+                if (!timerView.classList.contains('hidden')) {
+                    timerResetButton.click();
+                }
             }
         });
     </script>
