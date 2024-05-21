@@ -98,7 +98,7 @@
             <div id="stopwatchResetButton" class="button button-reset">RESET</div>
         </div>
         <div id="timerView" class="hidden slide">
-            <div id="timerDisplay" class="timer cursor-pointer">00:00</div>
+            <div id="timerDisplay" class="timer cursor-pointer">00:00:00</div>
             <div id="timerStartStopButton" class="button button-start">START</div>
             <div id="timerResetButton" class="button button-reset">RESET</div>
         </div>
@@ -177,21 +177,22 @@
 
         function updateTimer() {
             if (timerMilliseconds > 0) {
-                timerMilliseconds -= 1000;
+                timerMilliseconds -= 10;
                 const totalSeconds = Math.floor(timerMilliseconds / 1000);
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = totalSeconds % 60;
-                timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                const ms = Math.floor((timerMilliseconds % 1000) / 10);
+                timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}:${ms < 10 ? '0' : ''}${ms}`;
             } else {
                 clearInterval(timerInterval);
-                timerDisplay.textContent = '00:00';
+                timerDisplay.textContent = '00:00:00';
                 timerDisplay.classList.add('bg-red-500', 'text-white');
                 alert('Time is up!');
             }
         }
 
         function startTimer() {
-            timerInterval = setInterval(updateTimer, 1000);
+            timerInterval = setInterval(updateTimer, 10);
             timerStartStopButton.textContent = 'STOP';
             timerStartStopButton.classList.remove('button-start');
             timerStartStopButton.classList.add('button-stop');
@@ -210,7 +211,8 @@
             const totalSeconds = Math.floor(timerMilliseconds / 1000);
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
-            timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            const ms = Math.floor((timerMilliseconds % 1000) / 10);
+            timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}:${ms < 10 ? '0' : ''}${ms}`;
             timerDisplay.classList.remove('bg-red-500', 'text-white');
         }
 
@@ -234,8 +236,8 @@
             input.focus();
 
             input.addEventListener('blur', () => {
-                const [minutes, seconds] = input.value.split(':').map(Number);
-                timerMilliseconds = (minutes * 60 + seconds) * 1000;
+                const [minutes, seconds, ms] = input.value.split(':').map(Number);
+                timerMilliseconds = (minutes * 60 * 1000) + (seconds * 1000) + (ms * 10);
                 initialTimerMilliseconds = timerMilliseconds;
                 timerDisplay.textContent = input.value;
                 input.replaceWith(timerDisplay);
